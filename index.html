@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta property="og:title" content="Острів Днюхи Дениска">
+<meta property="og:description" content="Пройди всі квести до кінця 😏">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Острів Днюхи Дениска</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Press+Start+2P&family=Rubik:wght@400;500;700;800&family=Unbounded:wght@700;900&display=swap">
+<style>
+/* Layout: one game column floating on an endless sea; screens swap like game states (loading → menu → map → ending).
+   Deliberately single-theme: a bright cartoon mobile-game world, so every color is set explicitly. */
+:root{
+  --sea:#1b95d6; --sea-deep:#0f6fae; --sea-hi:#45b8f2; --foam:#c4eeff;
+  --ink:#1b1426; --paper:#fff7e6; --paper-2:#ffe8bd; --white:#ffffff;
+  --sun:#ffcc2e; --sun-2:#ffb300; --pink:#ff4f96; --mint:#34d69c; --mint-soft:#d6f7e8;
+  --grass:#72d35f; --grass-2:#86de6f; --grass-dark:#3d9d3b; --sand:#f5d489; --red:#e8323a;
+  --stone:#b9b2c4; --mtn:#9a8fb0; --wood:#c98b4f; --river:#7fd3ff;
+  --night:#170e2b; --night-2:#33205a; --muted:#6a5d78;
+  --hair:rgba(27,20,38,.2); --shade:rgba(15,40,70,.22); --scrim:rgba(12,8,24,.62);
+  --f-display:"Unbounded","Rubik",system-ui,sans-serif;
+  --f-body:"Rubik",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-hand:"Caveat","Segoe Print","Comic Sans MS",cursive;
+  --f-pixel:"Press Start 2P",ui-monospace,Menlo,monospace;
+  --line:3px; --r:18px; --sh:5px 5px 0 var(--ink);
+  --outline:3px 0 0 var(--ink),-3px 0 0 var(--ink),0 3px 0 var(--ink),0 -3px 0 var(--ink),2px 2px 0 var(--ink),-2px 2px 0 var(--ink),2px -2px 0 var(--ink),-2px -2px 0 var(--ink),0 7px 0 var(--ink);
+  --outline-sm:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),0 4px 0 var(--ink);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font:400 16px/1.45 var(--f-body);background-color:var(--sea);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='80' viewBox='0 0 140 80'%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M12 22q8-7 16 0t16 0' stroke-opacity='.22'/%3E%3Cpath d='M84 60q8-7 16 0t16 0' stroke-opacity='.14'/%3E%3C/g%3E%3C/svg%3E"),radial-gradient(120% 80% at 50% 0%,var(--sea-hi) 0%,var(--sea) 45%,var(--sea-deep) 100%);
+  background-attachment:fixed;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
+button{font:inherit;color:inherit}
+.px{font-family:var(--f-pixel);font-weight:400;letter-spacing:0}
+
+/* ---------- shared ---------- */
+.screen{min-height:100%;width:100%;display:flex;flex-direction:column;align-items:center;padding-inline:16px;padding-block:20px}
+.center{justify-content:center}
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:.5em;font-family:var(--f-display);font-weight:900;font-size:16px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink);background:var(--sun);border:var(--line) solid var(--ink);border-radius:16px;padding:14px 20px;box-shadow:0 6px 0 var(--ink);cursor:pointer;transition:transform .08s ease,box-shadow .08s ease,background-color .2s;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.btn:disabled{opacity:.55;cursor:default;transform:none;box-shadow:0 6px 0 var(--ink);filter:none}
+.btn.pink{background:var(--pink)} .btn.mint{background:var(--mint)} .btn.ghost{background:var(--paper)}
+:is(.btn,.node,.hud-btn,.m-close,.pop,.target,.tab,.bottle,.letter):focus-visible{outline:4px solid var(--white);outline-offset:3px}
+.card{background:var(--paper);border:var(--line) solid var(--ink);border-radius:var(--r);box-shadow:var(--sh)}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+@keyframes popin{from{transform:scale(.85) translateY(20px);opacity:0}}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s}
+
+/* ---------- loading ---------- */
+.load-box{width:min(440px,100%);display:grid;gap:14px;justify-items:center;text-align:center}
+.logo{font:900 clamp(46px,14vw,76px)/.95 var(--f-display);color:var(--sun);text-shadow:var(--outline);letter-spacing:-.01em;transform:rotate(-4deg);margin-bottom:10px}
+.logo small{display:block;font-size:.34em;color:var(--paper);letter-spacing:.1em;margin-top:.45em}
+.load-label{margin:6px 0 0;font:700 13px var(--f-display);color:var(--paper);letter-spacing:.14em;text-transform:uppercase}
+.bar{width:100%;height:30px;border:var(--line) solid var(--ink);border-radius:999px;background:var(--paper);box-shadow:0 5px 0 var(--ink);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:repeating-linear-gradient(-45deg,var(--sun) 0 14px,var(--sun-2) 14px 28px);border-right:var(--line) solid var(--ink);transition:width .25s ease}
+.pct{font:400 22px var(--f-pixel);color:var(--paper);text-shadow:0 3px 0 var(--ink);font-variant-numeric:tabular-nums}
+.tip{margin:0;max-width:34ch;color:var(--paper);font-size:15px;min-height:3em;text-wrap:balance}
+.tip b{color:var(--sun)}
+
+/* ---------- menu ---------- */
+.menu{width:min(480px,100%);display:grid;gap:18px}
+.season{justify-self:center;font:700 11px var(--f-display);letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--sun);padding:8px 14px;border-radius:999px}
+.title{text-align:center;font:900 clamp(28px,8.6vw,48px)/1.05 var(--f-display);color:var(--paper);text-shadow:var(--outline);padding-bottom:6px}
+.title .name{display:block;color:var(--sun);font-size:1.22em;transform:rotate(-3deg);margin-top:.14em}
+.lvlup{justify-self:center;display:flex;align-items:center;gap:12px;background:var(--paper);border:var(--line) solid var(--ink);border-radius:14px;padding:10px 16px;box-shadow:0 5px 0 var(--ink);font-size:12px}
+.lvlup .old{opacity:.45;text-decoration:line-through}
+.lvlup .new{color:var(--pink);font-size:15px;animation:blink 1.2s steps(2) infinite}
+.lvlup .arr{font:900 18px var(--f-display)}
+.profile{padding:16px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center}
+.avatar{width:64px;height:64px;border-radius:16px;border:var(--line) solid var(--ink);background:var(--pink);display:grid;place-items:center;font:900 30px var(--f-display);color:var(--paper);text-shadow:var(--outline-sm)}
+.pname{font:900 21px/1.15 var(--f-display);min-width:0}
+.pname small{display:block;font:500 13px var(--f-body);color:var(--muted);margin-top:3px}
+.stats{grid-column:1/-1;margin:8px 0 0;display:grid;border-top:2px dashed var(--hair)}
+.stats div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 2px;border-bottom:2px dashed var(--hair)}
+.stats dt{color:var(--muted);font-size:14px}
+.stats dd{margin:0;font-weight:700;text-align:right;font-size:14px}
+.bad{color:var(--red)} .good{color:var(--grass-dark)}
+.menu-btns{display:grid;gap:14px}
+.menu-btns>.btn{width:100%;font-size:19px;padding:17px}
+.menu-btns .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.menu-btns .row .btn{font-size:12px;letter-spacing:.01em;padding:13px 6px}
+@media (max-width:379px){.menu-btns .row{grid-template-columns:1fr}}
+
+/* ---------- HUD + map ---------- */
+.map-screen{height:100%;min-height:0;padding-block:10px 12px;gap:10px}
+.hud{width:min(1100px,100%);display:flex;align-items:center;gap:10px;flex:none}
+.hud-lvl{background:var(--sun);border:var(--line) solid var(--ink);border-radius:12px;padding:10px;font-size:11px;box-shadow:0 4px 0 var(--ink);white-space:nowrap}
+.hud-xp{flex:1;min-width:0;display:grid;gap:4px}
+.xp-bar{height:16px;border:var(--line) solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.xp-bar>i{display:block;height:100%;width:0;background:var(--mint);border-right:var(--line) solid var(--ink);transition:width .8s cubic-bezier(.2,.9,.3,1.2)}
+.xp-text{font:700 11px var(--f-display);color:var(--paper);letter-spacing:.06em;text-transform:uppercase;text-shadow:0 2px 0 var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-btn{position:relative;width:46px;height:46px;flex:none;border:var(--line) solid var(--ink);border-radius:12px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font-size:21px;cursor:pointer;display:grid;place-items:center;padding:0}
+.hud-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.hud-btn b{position:absolute;top:-9px;right:-9px;min-width:22px;height:22px;border-radius:999px;background:var(--pink);border:2px solid var(--ink);font:700 12px/18px var(--f-body);padding-inline:4px}
+.map-area{flex:1;min-height:0;width:min(1100px,100%);display:flex;gap:28px;justify-content:center}
+.map-holder{flex:1;min-width:0;min-height:0;container-type:size;display:grid;place-items:center}
+.map{position:relative;width:min(100cqw,calc(100cqh * 400 / 760));aspect-ratio:400/760;max-width:100%}
+.map svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.questlog{display:none;align-self:center;width:270px;flex:none;padding:16px}
+.questlog h3{font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+.ql{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ql li{display:flex;gap:10px;align-items:center;padding:9px 10px;border:2px solid var(--ink);border-radius:12px;background:var(--white);font-weight:600;font-size:14px}
+.ql li[data-s="locked"]{opacity:.5;border-style:dashed}
+.ql li[data-s="active"]{background:var(--sun)}
+.ql li[data-s="done"]{background:var(--mint-soft)}
+.ql .st{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.ql-foot{margin:12px 0 0;font-size:13px;color:var(--muted)}
+@media (min-width:980px){.questlog{display:block}.map-area::after{content:"";width:270px;flex:none}}
+/* ---------- map drawing ---------- */
+.shallow{fill:none;stroke:var(--foam);stroke-width:34;stroke-linejoin:round;opacity:.5}
+.foam{fill:none;stroke:var(--white);stroke-width:5;stroke-linecap:round;stroke-dasharray:.5 12;opacity:.85}
+.land{fill:var(--grass);stroke:var(--sand);stroke-width:26}
+.patch{fill:var(--grass-2)}
+.coast{fill:none;stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.river-b{fill:none;stroke:var(--ink);stroke-width:12}
+.river{fill:none;stroke:var(--river);stroke-width:7}
+.bridge{fill:var(--wood);stroke:var(--ink);stroke-width:2.5}
+.bridge-l{stroke:var(--ink);stroke-width:1.5}
+.tsh{fill:var(--shade)}
+.canopy{fill:var(--grass-dark);stroke:var(--ink);stroke-width:2.5}
+.rock{fill:var(--stone);stroke:var(--ink);stroke-width:2.5}
+.mtn{fill:var(--mtn);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.snow{fill:var(--white);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.court-r{fill:var(--sand);stroke:var(--ink);stroke-width:2.5}
+.court-net{stroke:var(--ink);stroke-width:3;stroke-dasharray:2 2}
+.lh{fill:var(--white);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.lh-s{stroke:var(--red);stroke-width:4}
+.lh-top{fill:var(--sun);stroke:var(--ink);stroke-width:2}
+.lh-roof{fill:var(--red);stroke:var(--ink);stroke-width:2;stroke-linejoin:round}
+.pole{stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.flag{fill:var(--red);stroke:var(--ink);stroke-width:2;stroke-linejoin:round}
+.emo{font-size:16px;text-anchor:middle;dominant-baseline:central}
+.emo-l{font-size:28px;text-anchor:middle;dominant-baseline:central}
+.cart{fill:var(--paper);stroke:var(--ink);stroke-width:3}
+.cart-t{font:900 9.6px var(--f-display);fill:var(--ink);letter-spacing:.02em}
+.cart-s{font:700 15px var(--f-hand);fill:var(--muted)}
+.cmp{fill:var(--paper);stroke:var(--ink);stroke-width:3}
+.cmp-a{fill:var(--pink);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.cmp-b{fill:var(--white);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.lbl{font:700 19px var(--f-hand);fill:var(--ink);paint-order:stroke;stroke:var(--paper);stroke-width:3.5px;stroke-linejoin:round}
+.lbl.sea{fill:var(--paper);stroke:var(--ink)}
+.lbl.sm{font-size:16.5px}
+.ship{transition:transform 1.2s cubic-bezier(.3,1.5,.5,1)}
+.trail-base{fill:none;stroke:var(--paper);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:1 8;opacity:.95}
+.trail-done{fill:none;stroke:var(--pink);stroke-width:6;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;opacity:0;transition:stroke-dashoffset 1.1s ease}
+.trail-done.on{stroke-dashoffset:0;opacity:1}
+.reg{transition:opacity .8s ease .5s}
+.reg.off{opacity:0}
+.cloud{transform-box:fill-box;transform-origin:center;transition:opacity 1s ease,transform 1.3s ease}
+.cloud.gone{opacity:0;transform:scale(1.3) translateY(-14px);pointer-events:none}
+.cloud .bob{animation:bob 7s ease-in-out infinite}
+.cloud:nth-child(2) .bob{animation-delay:-2s}.cloud:nth-child(3) .bob{animation-delay:-4s}.cloud:nth-child(4) .bob{animation-delay:-5.5s}
+@keyframes bob{50%{transform:translateY(-5px)}}
+.c-shadow circle{fill:var(--shade)}
+.c-out circle{fill:var(--ink);stroke:var(--ink);stroke-width:7}
+.c-fill circle{fill:var(--white)}
+
+/* ---------- nodes / token ---------- */
+.nodes{position:absolute;inset:0;pointer-events:none}
+.node{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;padding:0;border-radius:50%;border:var(--line) solid var(--ink);background:var(--paper);box-shadow:0 4px 0 var(--ink);font-size:22px;display:grid;place-items:center;cursor:pointer;pointer-events:auto;transition:background-color .3s}
+.node[data-s="locked"]{display:none}
+.node[data-s="active"]{background:var(--sun);animation:pulse 1.4s ease-in-out infinite}
+.node[data-s="done"]{background:var(--mint)}
+.node .n{position:absolute;top:-10px;right:-10px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font:700 12px/22px var(--f-body);text-align:center}
+.node[data-s="done"] .n{background:var(--grass-dark)}
+.node .bang{position:absolute;left:50%;bottom:calc(100% + 8px);font:900 24px/1 var(--f-display);color:var(--sun);text-shadow:var(--outline-sm);animation:hop .8s ease-in-out infinite;display:none}
+.node[data-s="active"] .bang{display:block}
+@keyframes pulse{0%,100%{box-shadow:0 4px 0 var(--ink),0 0 0 0 rgba(255,204,46,.9)}50%{box-shadow:0 4px 0 var(--ink),0 0 0 14px rgba(255,204,46,0)}}
+@keyframes hop{0%,100%{transform:translateX(-50%)}50%{transform:translate(-50%,-7px)}}
+.token{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:var(--paper);border:var(--line) solid var(--ink);display:grid;place-items:center;font-size:18px;pointer-events:none;z-index:2;box-shadow:0 3px 0 var(--ink)}
+.token.ease{transition:left .35s ease,top .35s ease}
+.bottle{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border:none;background:none;font-size:26px;cursor:pointer;padding:0;animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px) rotate(12deg)}}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:70;display:flex;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);overflow-y:auto}
+.m-card{margin:auto;width:min(460px,100%);overflow:hidden;animation:popin .28s cubic-bezier(.2,.9,.3,1.3)}
+.m-head{display:flex;align-items:center;gap:12px;padding:14px;background:var(--sun);border-bottom:var(--line) solid var(--ink)}
+.m-icon{width:48px;height:48px;flex:none;border-radius:14px;border:var(--line) solid var(--ink);background:var(--paper);display:grid;place-items:center;font-size:26px}
+.m-kicker{font:700 10.5px var(--f-display);letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.m-head h2{font-size:19px;line-height:1.15}
+.m-close{margin-left:auto;width:40px;height:40px;flex:none;border-radius:12px;border:var(--line) solid var(--ink);background:var(--paper);font-weight:900;cursor:pointer;padding:0}
+.m-body{padding:16px;display:grid;gap:14px}
+.m-body p{margin:0}
+.lead{font-size:16px}
+
+/* ---------- mini-games ---------- */
+.arena{position:relative;height:300px;border:var(--line) solid var(--ink);border-radius:16px;overflow:hidden;background:linear-gradient(var(--foam),var(--paper));touch-action:none;user-select:none;-webkit-user-select:none}
+.arena-hud{position:absolute;top:8px;left:8px;z-index:3;background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:4px 10px;font:700 14px var(--f-body);font-variant-numeric:tabular-nums}
+.pop,.target{position:absolute;width:58px;height:58px;border:none;background:none;font-size:40px;line-height:1;cursor:pointer;padding:0;animation:grow .22s ease-out;z-index:2}
+.pop.got{transform:scale(1.7);opacity:0;transition:.25s;pointer-events:none}
+@keyframes grow{from{transform:scale(0)}}
+.court{background:linear-gradient(var(--sea-hi) 0 72%,var(--sand) 72%)}
+.court .net{position:absolute;left:50%;bottom:28%;width:8px;height:74px;margin-left:-4px;background:repeating-linear-gradient(var(--ink) 0 3px,var(--paper) 3px 8px);border:2px solid var(--ink)}
+.ball{position:absolute;left:0;top:0;width:58px;height:58px;font-size:48px;line-height:58px;text-align:center;will-change:transform;pointer-events:none;z-index:2}
+.arena-msg{position:absolute;top:40%;left:0;right:0;text-align:center;font:900 26px var(--f-display);color:var(--paper);text-shadow:var(--outline-sm);pointer-events:none;opacity:0;z-index:3}
+.arena-msg.show{animation:msg 1s ease-out}
+@keyframes msg{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:translateY(-20px)}}
+.range{background:repeating-linear-gradient(90deg,#3b3446 0 40px,#433b50 40px 80px);cursor:crosshair}
+.range .target{cursor:crosshair}
+.verdict{text-align:center;display:grid;gap:12px;justify-items:center}
+.v-k{font:700 11px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.v-time{font:400 24px var(--f-pixel);font-variant-numeric:tabular-nums}
+.v-lvl{width:116px;height:116px;border-radius:50%;border:4px solid var(--ink);background:conic-gradient(var(--sun) 0 70%,var(--paper) 0);display:grid;place-items:center;box-shadow:0 5px 0 var(--ink);animation:popin .6s cubic-bezier(.2,.9,.3,1.4)}
+.v-lvl span{background:var(--paper);border-radius:50%;width:80px;height:80px;display:grid;place-items:center;border:3px solid var(--ink);font-size:12px}
+.q-big{font:900 20px/1.25 var(--f-display);text-align:center}
+.yesno{position:relative;height:250px;display:flex;align-items:flex-end;justify-content:center;gap:12px;padding-bottom:22px;border:2px dashed var(--hair);border-radius:16px}
+.yesno .btn{transition:transform .2s ease,left .12s ease,top .12s ease,background-color .2s}
+.hint{text-align:center;color:var(--muted);font-size:14px;min-height:1.4em}
+.sheet{position:relative;background:var(--white);border:2px solid var(--ink);border-radius:6px;padding:16px 16px 22px;font:700 15px var(--f-body);transform:rotate(-1.5deg);box-shadow:3px 3px 0 var(--ink)}
+.sheet small{display:block;color:var(--muted);font-weight:400}
+.stamp{position:absolute;right:12px;bottom:8px;border:3px solid var(--red);color:var(--red);font:900 13px var(--f-display);padding:4px 8px;border-radius:6px;transform:rotate(-12deg) scale(2.4);opacity:0;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .2s;letter-spacing:.04em;background:var(--white)}
+.stamp.on{transform:rotate(-12deg) scale(1);opacity:1}
+.teacher{display:flex;gap:10px;align-items:flex-start}
+.teacher .face{font-size:38px;line-height:1}
+.bubble{background:var(--paper-2);border:2px solid var(--ink);border-radius:14px;padding:10px 12px;font-weight:600}
+
+/* ---------- loot / memes ---------- */
+.win{display:grid;gap:12px;text-align:center}
+.win-k{font:900 22px var(--f-display);color:var(--grass-dark)}
+.win-xp{font-size:14px;color:var(--pink)}
+.loot-k{font:700 12px var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+.meme{text-align:left;border:var(--line) solid var(--ink);border-radius:16px;overflow:hidden;background:var(--white);box-shadow:4px 4px 0 var(--ink)}
+.meme-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;background:var(--ink);color:var(--paper);padding:8px 12px;font:700 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.meme-h span:last-child{color:var(--sun);text-align:right}
+.meme-b{padding:14px;display:grid;gap:8px;font-size:16px}
+.meme-b p{margin:0}
+.meme-foot{color:var(--muted);font-size:13px}
+.dlg{display:grid;gap:6px}
+.big-emo{font-size:34px;text-align:center;letter-spacing:.12em;line-height:1.2}
+.tier{display:grid;gap:4px}
+.tier div{display:grid;grid-template-columns:42px 1fr;border:2px solid var(--ink);border-radius:8px;overflow:hidden}
+.tier i{font:900 18px/1 var(--f-display);font-style:normal;display:grid;place-items:center;padding:8px 0;border-right:2px solid var(--ink)}
+.tier span{padding:8px 10px;background:var(--white);font-size:15px;font-weight:500}
+.t-s{background:#ff7f7f}.t-a{background:#ffbf7f}.t-b{background:#ffdf7f}.t-c{background:#bfff7f}.t-d{background:#7fbfff}.t-f{background:#c39bff}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.panels div{border:2px solid var(--ink);border-radius:10px;padding:10px;text-align:center;background:var(--paper);font-size:15px}
+.panels .e{font-size:38px;display:block;line-height:1.2}
+.horo{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.meme.wanted .meme-b{background:#f3dcaa;text-align:center;justify-items:center}
+.w1{font:900 28px/1 var(--f-display);letter-spacing:.03em}
+.wav{width:96px;height:96px;border:3px solid var(--ink);background:var(--pink);border-radius:8px;display:grid;place-items:center;font:900 44px var(--f-display);color:var(--paper);text-shadow:var(--outline-sm)}
+.w2{font:900 20px var(--f-display)}
+.w3{font:900 16px var(--f-display);border-top:2px dashed var(--ink);padding-top:8px}
+
+/* ---------- inventory ---------- */
+.tabs{display:flex;gap:8px}
+.tab{flex:1;padding:10px 6px;border:var(--line) solid var(--ink);border-radius:12px;background:var(--paper);font:700 12px var(--f-display);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--sun)}
+.inv-grid{display:grid;gap:14px}
+.locked{border:var(--line) dashed var(--ink);border-radius:16px;padding:16px;text-align:center;color:var(--muted);font-weight:600;background:var(--paper)}
+.achs{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.achs li{display:flex;gap:10px;align-items:center;padding:10px;border:2px solid var(--ink);border-radius:12px;background:var(--white)}
+.achs li.no{opacity:.45;border-style:dashed}
+.achs .ai{font-size:22px}
+.achs b{display:block;font-size:15px}
+.achs small{color:var(--muted)}
+.err{display:grid;gap:14px}
+.err-bar{background:var(--ink);color:var(--paper);font:700 12px var(--f-body);padding:6px 10px;border-radius:8px}
+.err-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- toasts / fx ---------- */
+.toasts{position:fixed;left:0;right:0;top:0;z-index:80;display:grid;justify-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 0;pointer-events:none}
+.toast{width:min(380px,100%);background:var(--ink);color:var(--paper);border:var(--line) solid var(--paper);border-radius:14px;padding:10px 14px;box-shadow:0 6px 0 var(--shade);animation:tin .35s cubic-bezier(.2,.9,.3,1.3);font-weight:500}
+.toast.out{animation:tout .4s ease forwards}
+.ach{display:flex;gap:12px;align-items:center}
+.ach-i{width:44px;height:44px;flex:none;border-radius:10px;background:var(--sun);display:grid;place-items:center;font-size:24px;border:2px solid var(--paper)}
+.ach-k{font:700 10px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--sun)}
+.ach-t{font-weight:800}
+.ach-d{font-size:13px;opacity:.82}
+@keyframes tin{from{transform:translateY(-120%);opacity:0}}
+@keyframes tout{to{transform:translateY(-120%);opacity:0}}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+.hit{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;animation:hit .32s ease-out forwards;filter:drop-shadow(0 0 1.5px var(--ink)) drop-shadow(0 0 1px var(--ink))}
+@keyframes hit{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.float{position:fixed;z-index:91;pointer-events:none;font:900 18px var(--f-display);color:var(--sun);text-shadow:var(--outline-sm);animation:floatup .9s ease-out forwards;white-space:nowrap;transform:translate(-50%,-50%)}
+@keyframes floatup{to{transform:translate(-50%,-170%);opacity:0}}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95}
+
+/* ---------- ending ---------- */
+.ending{position:fixed;inset:0;z-index:60;overflow-y:auto;background:radial-gradient(120% 90% at 50% 30%,var(--night-2),var(--night));color:var(--paper);display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.flashbox{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:0}
+.flashbox.go{animation:flash 1s steps(1)}
+@keyframes flash{0%{opacity:.9;background:var(--pink)}25%{opacity:.9;background:var(--sun)}50%{opacity:.9;background:var(--mint)}75%{opacity:0}}
+.end-inner{position:relative;z-index:1;margin:auto;width:min(620px,100%);display:grid;gap:22px;justify-items:center;text-align:center}
+.end-k{font:900 clamp(22px,6vw,34px)/1.15 var(--f-display);color:var(--sun)}
+.letter{position:relative;width:100%;text-align:left;background:var(--paper);color:var(--ink);border:var(--line) solid var(--ink);border-radius:6px;padding:26px 22px 28px;font:700 clamp(21px,5.4vw,27px)/1.3 var(--f-hand);transform:rotate(-1deg);box-shadow:8px 8px 0 var(--shade);white-space:pre-wrap;min-height:200px;cursor:pointer}
+.letter::before{content:"";position:absolute;top:-14px;left:50%;width:110px;height:28px;margin-left:-55px;background:var(--sun);opacity:.8;transform:rotate(-3deg)}
+.caret{display:inline-block;width:2px;height:1em;background:var(--ink);vertical-align:-.12em;animation:blink .8s steps(2) infinite;margin-left:2px}
+.letter.fly{animation:fly .7s cubic-bezier(.6,-.3,.8,.4) forwards;pointer-events:none}
+@keyframes fly{to{transform:translateY(120vh) rotate(25deg);opacity:.2}}
+.punch{display:grid;gap:8px;justify-items:center}
+.p1{font:900 clamp(38px,11vw,80px)/1 var(--f-display);color:var(--paper);animation:slam .5s cubic-bezier(.2,1.4,.4,1) both}
+.p2{font:900 clamp(44px,13.5vw,110px)/1.05 var(--f-display);color:var(--sun);text-shadow:var(--outline);animation:slam2 .45s cubic-bezier(.2,1.6,.4,1) both,wobble .5s .45s 3}
+@keyframes slam{from{transform:scale(.3);opacity:0}}
+.p3{display:block;font-size:.95em;line-height:1.1;animation:slam .4s .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slam2{from{transform:scale(3.2) rotate(-8deg);opacity:0}}
+@keyframes wobble{25%{transform:rotate(-3deg) scale(1.04)}75%{transform:rotate(3deg) scale(1.04)}}
+.shake-all{animation:bigshake .5s}
+@keyframes bigshake{10%,50%,90%{transform:translate(-8px,4px)}30%,70%{transform:translate(8px,-4px)}}
+.end-foot{display:grid;gap:16px;justify-items:center;animation:popin .4s ease both}
+.sign{font:700 28px var(--f-hand);color:var(--paper);margin:0}
+.end-btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<section id="scr-load" class="screen center">
+  <div class="load-box">
+    <div class="logo">ДНЮХА<small>.EXE · v21.0</small></div>
+    <p class="load-label">Завантаження днюхи…</p>
+    <div class="bar" role="progressbar" aria-label="Завантаження" aria-valuemin="0" aria-valuemax="100"><i id="loadFill"></i></div>
+    <div class="pct px" id="loadPct">0%</div>
+    <p class="tip"><b>Порада:</b> <span id="loadTip">розочка в MLBB — це на все життя 🌹</span></p>
+    <button class="btn blink" id="btnStart" hidden>Натисни, щоб почати</button>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="scr-menu" class="screen center" hidden>
+  <div class="menu">
+    <div class="season">Сезон 21 · новий рівень</div>
+    <h1 class="title">З днем народження,<span class="name">Дениску!</span></h1>
+    <div class="lvlup"><span class="px old">LVL 20</span><span class="arr">→</span><span class="px new">LVL 21</span></div>
+    <article class="card profile" aria-label="Профіль гравця">
+      <div class="avatar" aria-hidden="true">Д</div>
+      <div class="pname">ДЕНИСКО<small>клас: іменинник · регіон: Політех</small></div>
+      <dl class="stats">
+        <div><dt>Рівень</dt><dd><span class="px" style="font-size:11px">21</span> <span class="good">▲ +1</span></dd></div>
+        <div><dt>Статус у MLBB</dt><dd>в розочці 🌹</dd></div>
+        <div><dt>Волейбол</dt><dd>грали разом 🏐</dd></div>
+        <div><dt>Повага до 7 лвл FACEIT</dt><dd id="statRespect" class="bad">0% ❌</dd></div>
+        <div><dt>Універ</dt><dd>той самий, що в мене 🎓</dd></div>
+      </dl>
+    </article>
+    <nav class="menu-btns" aria-label="Головне меню">
+      <button class="btn" id="btnPlay">▶ Грати</button>
+      <div class="row">
+        <button class="btn ghost" id="btnSettings">⚙ Налаштування</button>
+        <button class="btn ghost" id="btnExit">🚪 Вийти</button>
+      </div>
+    </nav>
+  </div>
+</section>
+
+<!-- MAP -->
+<section id="scr-map" class="screen map-screen" hidden>
+  <div class="hud">
+    <div class="hud-lvl px">LVL 21</div>
+    <div class="hud-xp">
+      <div class="xp-bar"><i id="xpFill"></i></div>
+      <div class="xp-text" id="xpText">0/5 квестів</div>
+    </div>
+    <button class="hud-btn" id="btnInv" aria-label="Інвентар: меми й досягнення">🎒<b id="invCount">1</b></button>
+    <button class="hud-btn" id="btnSound" aria-label="Вимкнути звук">🔊</button>
+  </div>
+  <div class="map-area">
+    <aside class="questlog card" aria-label="Журнал квестів">
+      <h3>Журнал квестів</h3>
+      <ol class="ql" id="questLog"></ol>
+      <p class="ql-foot">Тисни на жовтий маркер на мапі. Лут падає в 🎒</p>
+    </aside>
+    <div class="map-holder">
+      <div class="map" id="map">
+        <svg id="mapSvg" viewBox="0 0 400 760" aria-hidden="true">
+          <defs>
+            <path id="isl" d="M200 653.7A82 82 0 1 1 152 519.2L152 205L138 210C122 140 160 68 200 68C240 68 278 140 262 210L248 205L248 519.2A82 82 0 1 1 200 653.7Z"/>
+            <clipPath id="islClip"><use href="#isl"/></clipPath>
+          </defs>
+          <use href="#isl" class="shallow"/>
+          <use href="#isl" class="foam"/>
+          <g clip-path="url(#islClip)">
+            <use href="#isl" class="land"/>
+            <ellipse class="patch" cx="110" cy="612" rx="34" ry="22"/>
+            <ellipse class="patch" cx="292" cy="572" rx="30" ry="20"/>
+            <ellipse class="patch" cx="196" cy="372" rx="26" ry="40"/>
+            <ellipse class="patch" cx="214" cy="150" rx="30" ry="22"/>
+          </g>
+          <use href="#isl" class="coast"/>
+          <path class="river-b" d="M140 208Q200 238 260 208"/>
+          <path class="river" d="M140 208Q200 238 260 208"/>
+          <g transform="translate(222 216) rotate(-8)"><rect x="-8" y="-12" width="16" height="24" rx="2" class="bridge"/><path d="M-8-5H8M-8 2H8" class="bridge-l"/></g>
+
+          <!-- decorations -->
+          <g transform="translate(70 596)"><ellipse class="tsh" cx="2" cy="7" rx="9" ry="4"/><circle class="canopy" r="9"/></g>
+          <g transform="translate(106 556)"><ellipse class="tsh" cx="2" cy="7" rx="9" ry="4"/><circle class="canopy" r="9"/></g>
+          <g transform="translate(330 606)"><ellipse class="tsh" cx="2" cy="7" rx="9" ry="4"/><circle class="canopy" r="9"/></g>
+          <g transform="translate(238 168)"><ellipse class="tsh" cx="2" cy="7" rx="9" ry="4"/><circle class="canopy" r="9"/></g>
+          <text class="emo" x="68" y="624">🌹</text>
+          <text class="emo" x="152" y="556">🌹</text>
+          <text class="emo" x="178" y="610">🌹</text>
+          <g transform="translate(70 640)"><path d="M0 0V-26" class="pole"/><path d="M0-26L17-20L0-14Z" class="flag"/></g>
+          <g transform="translate(305 640) rotate(-12)"><rect x="-24" y="-14" width="48" height="28" rx="3" class="court-r"/><path d="M0-17V17" class="court-net"/></g>
+          <text class="emo" x="318" y="566" style="font-size:18px">🌴</text>
+          <text class="emo" x="238" y="668" style="font-size:18px">🌴</text>
+          <ellipse class="rock" cx="172" cy="478" rx="10" ry="7"/>
+          <ellipse class="rock" cx="230" cy="404" rx="8" ry="6"/>
+          <ellipse class="rock" cx="168" cy="420" rx="6" ry="5"/>
+          <g transform="translate(172 372)"><path d="M-17 0L0-27L17 0Z" class="mtn"/><path d="M-6-17L0-27L6-17L2-15L-2-18Z" class="snow"/></g>
+          <g transform="translate(174 272)"><path d="M-16 0L0-25L16 0Z" class="mtn"/><path d="M-6-16L0-25L6-16L2-14L-2-17Z" class="snow"/></g>
+          <text class="emo" x="234" y="334" style="font-size:20px">🏛️</text>
+          <g transform="translate(164 152)"><path d="M-7 0L-4-30H4L7 0Z" class="lh"/><path d="M-6.2-8H6.2M-5.2-18H5.2" class="lh-s"/><rect x="-5" y="-38" width="10" height="8" class="lh-top"/><path d="M-6-38L0-45L6-38Z" class="lh-roof"/></g>
+
+          <!-- sea -->
+          <g transform="translate(14 16)">
+            <rect width="132" height="56" rx="10" class="cart"/>
+            <text x="66" y="24" text-anchor="middle" class="cart-t">ОСТРІВ ДНЮХИ</text>
+            <text x="66" y="45" text-anchor="middle" class="cart-s">мапа квестів · 1:69</text>
+          </g>
+          <g transform="translate(354 104)">
+            <circle r="24" class="cmp"/>
+            <path d="M0-19L6 0H-6Z" class="cmp-a"/><path d="M0 19L6 0H-6Z" class="cmp-b"/>
+            <text y="-32" text-anchor="middle" class="lbl sea sm">до кінця ↑</text>
+          </g>
+          <g id="ship" class="ship" transform="translate(350 188) rotate(32)"><text class="emo-l" x="0" y="0">⛵</text></g>
+          <text class="lbl sea sm" x="348" y="226" text-anchor="middle">«Повага</text>
+          <text class="lbl sea sm" x="348" y="242" text-anchor="middle">до 7 лвл»</text>
+          <text class="lbl sea sm" id="shipState" x="348" y="258" text-anchor="middle">(затонула)</text>
+          <text class="lbl sea sm" x="58" y="394" text-anchor="middle">Тут водяться</text>
+          <text class="lbl sea sm" x="58" y="411" text-anchor="middle">боти 🤖</text>
+          <text class="emo-l" x="58" y="450">🐙</text>
+
+          <!-- labels revealed by region -->
+          <text class="lbl sea reg" data-r="0" x="112" y="714" text-anchor="middle">Розочкові пагорби</text>
+          <text class="lbl sea reg off" data-r="1" x="292" y="714" text-anchor="middle">Волейбольна бухта</text>
+          <text class="lbl sea reg off" data-r="2" x="258" y="447">Ущелина FACEIT</text>
+          <text class="lbl sea reg off" data-r="3" x="142" y="294" text-anchor="end">Політехнічний</text>
+          <text class="lbl sea reg off" data-r="3" x="142" y="312" text-anchor="end">хребет</text>
+          <text class="lbl sea reg off" data-r="4" x="200" y="46" text-anchor="middle">Мис Кінець</text>
+
+          <g id="trail"></g>
+          <g id="clouds"></g>
+        </svg>
+        <div class="nodes" id="nodes"></div>
+        <button class="bottle" id="bottle" style="left:10%;top:68.4%" aria-label="Пляшка з листом">🍾</button>
+        <div class="token" id="token" aria-hidden="true">😎</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENDING -->
+<section id="scr-end" class="ending" hidden>
+  <div class="flashbox" id="flashbox"></div>
+  <div class="end-inner" id="endInner">
+    <div class="end-k" id="endK">Ти дійшов до кінця 😏</div>
+    <article class="letter" id="letter" tabindex="0" title="Натисни, щоб дочитати одразу" hidden><span id="letterText"></span><span class="caret"></span></article>
+    <div class="punch" id="punch" hidden>
+      <div class="p1" id="p1">Я жартую.</div>
+      <div class="p2" id="p2" hidden>Іди нахуй<span class="p3" aria-hidden="true">🖕</span></div>
+    </div>
+    <div class="end-foot" id="endFoot" hidden>
+      <p class="sign">з любов'ю, твій тімейт з розочки 🌹</p>
+      <div class="end-btns">
+        <button class="btn" id="btnInv2">🎒 Мої меми</button>
+        <button class="btn ghost" id="btnAgain">🔁 Пройти ще раз</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal" id="modal" hidden>
+  <div class="card m-card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <header class="m-head">
+      <div class="m-icon" id="mIcon" aria-hidden="true">🌹</div>
+      <div><div class="m-kicker" id="mKicker">Квест</div><h2 id="mTitle">…</h2></div>
+      <button class="m-close" id="mClose" aria-label="Закрити">✕</button>
+    </header>
+    <div class="m-body" id="mBody"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="fx" id="fx"></div>
+<canvas id="confetti"></canvas>
+<script>
+/* ===== config & helpers ===== */
+const $ = (s, r = document) => r.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function el(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function svgEl(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+/* ===== sound (WebAudio, no files) ===== */
+const sfx = (() => {
+  let ctx = null, master = null, on = true;
+  function init() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    try { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = .45; master.connect(ctx.destination); } catch (e) { ctx = null; }
+  }
+  function tone(f, d = .12, type = 'square', vol = .2, when = 0, slide = 0) {
+    if (!ctx || !on) return;
+    const t = ctx.currentTime + when, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + d + .03);
+  }
+  function noise(d = .1, vol = .3, when = 0, freq = 2000, q = 1, sweepTo = 0) {
+    if (!ctx || !on) return;
+    const t = ctx.currentTime + when, len = Math.max(1, Math.floor(ctx.sampleRate * d));
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = buf; f.type = 'bandpass'; f.Q.value = q; f.frequency.setValueAtTime(freq, t);
+    if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + d);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    src.connect(f); f.connect(g); g.connect(master); src.start(t); src.stop(t + d + .02);
+  }
+  return {
+    init, tone, get on() { return on; }, set on(v) { on = v; },
+    tick() { tone(1800, .035, 'square', .05); noise(.03, .1, 0, 4000); },
+    coin() { tone(988, .08, 'square', .1); tone(1319, .16, 'square', .1, .07); },
+    bump() { tone(240, .1, 'sine', .4, 0, -140); noise(.05, .15, 0, 900); },
+    shot() { noise(.13, .38, 0, 1500, .7); tone(130, .1, 'sine', .3, 0, -90); },
+    fail() { tone(310, .18, 'sawtooth', .1, 0, -160); tone(200, .28, 'sawtooth', .09, .16, -100); },
+    win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, 'square', .1, i * .09)); },
+    ach() { tone(784, .1, 'triangle', .2); tone(1175, .24, 'triangle', .2, .09); },
+    whoosh() { noise(.18, .12, 0, 500, .8, 3000); },
+    stamp() { noise(.08, .5, 0, 300, .6); tone(90, .12, 'sine', .4); },
+    scratch() { noise(.32, .55, 0, 500, 2, 3800); noise(.22, .45, .2, 3200, 2, 350); },
+    airhorn() {
+      [[0, .13], [.17, .13], [.34, .13], [.52, .7]].forEach(([w, d]) =>
+        [415, 419, 831, 622].forEach((f, i) => tone(f, d, 'sawtooth', i < 2 ? .13 : .05, w, -25)));
+    }
+  };
+})();
+
+/* sad "piano" loop for the letter: C – G – Am – F */
+const music = (() => {
+  let timer = null, step = 0;
+  const chords = [[261.6, 329.6, 392], [246.9, 293.7, 392], [220, 261.6, 329.6], [174.6, 220, 261.6]];
+  const pat = [0, 1, 2, 1, 0, 2, 1, 2];
+  function beat() {
+    const c = chords[Math.floor(step / 8) % 4], i = step % 8;
+    if (i === 0) sfx.tone(c[0] / 2, 1.6, 'sine', .16);
+    sfx.tone(c[pat[i]] * 2, .9, 'triangle', .07);
+    step++;
+  }
+  return { start() { this.stop(); step = 0; beat(); timer = setInterval(beat, 280); }, stop() { clearInterval(timer); timer = null; } };
+})();
+
+/* ===== fx: toasts, hitmarkers, floating text, confetti ===== */
+function toast(html) {
+  const t = el(`<div class="toast">${html}</div>`);
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.classList.add('out'), 2600);
+  setTimeout(() => t.remove(), 3050);
+}
+function floatText(target, text) {
+  const r = target.getBoundingClientRect ? target.getBoundingClientRect() : { left: target.x, top: target.y, width: 0, height: 0 };
+  const f = el(`<div class="float"></div>`); f.textContent = text;
+  f.style.left = (r.left + r.width / 2) + 'px'; f.style.top = (r.top + r.height / 2) + 'px';
+  document.body.appendChild(f); setTimeout(() => f.remove(), 950);
+}
+document.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  const h = el(`<svg class="hit" viewBox="-12 -12 24 24"><path d="M-9-9L-3.5-3.5M9-9L3.5-3.5M-9 9L-3.5 3.5M9 9L3.5 3.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>`);
+  h.style.left = e.clientX + 'px'; h.style.top = e.clientY + 'px';
+  $('#fx').appendChild(h); setTimeout(() => h.remove(), 340);
+  sfx.tick();
+}, { capture: true, passive: true });
+
+const confetti = (() => {
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  const colors = ['#ff4f96', '#ffcc2e', '#34d69c', '#45b8f2', '#fff7e6', '#9a6bff'];
+  const emo = ['🎉', '🌹', '🏐', '🎂', '🎯'];
+  let parts = [], running = false;
+  function fit() { const d = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * d; cv.height = innerHeight * d; cx.setTransform(d, 0, 0, d, 0, 0); }
+  function burst(n = 160, rude = false) {
+    fit(); if (REDUCE) n = Math.round(n / 4);
+    for (let i = 0; i < n; i++) {
+      const fromLeft = i % 2 === 0;
+      parts.push({
+        x: fromLeft ? -10 : innerWidth + 10, y: innerHeight * (.55 + Math.random() * .3),
+        vx: (fromLeft ? 1 : -1) * (4 + Math.random() * 9), vy: -(9 + Math.random() * 11),
+        r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3, s: 6 + Math.random() * 7,
+        c: colors[i % colors.length], e: Math.random() < .14 ? (rude && i % 3 === 0 ? '🖕' : emo[i % emo.length]) : null, life: 0
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+  function tick() {
+    cx.clearRect(0, 0, innerWidth, innerHeight);
+    parts.forEach(p => {
+      p.vy += .32; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life++;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+      if (p.e) { cx.font = '22px serif'; cx.fillText(p.e, -11, 8); }
+      else { cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); }
+      cx.restore();
+    });
+    parts = parts.filter(p => p.y < innerHeight + 40 && p.life < 400);
+    if (parts.length) requestAnimationFrame(tick); else { running = false; cx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+  return burst;
+})();
+
+/* ===== achievements ===== */
+const ACH = {
+  open: ['🚀', 'Відкрив днюху', 'Найважче позаду'],
+  patience: ['⏳', 'Терпіння 99%', 'Пережив завантаження'],
+  settings: ['⚙️', 'Налаштування? Серйозно?', 'Тут нічого не налаштовується'],
+  escape: ['🚪', 'Спроба втечі', 'З днюхи не виходять'],
+  rose: ['🌹', 'Розочка назавжди', 'Статус у MLBB підтверджено'],
+  out: ['😭', 'АУТ', 'М\'яч торкнувся землі'],
+  volley: ['🏐', 'МОЄ!', '5 пасів поспіль'],
+  stubborn: ['🐏', 'Впертий', 'Тричі тягнувся до «Ні»'],
+  respect: ['🫡', 'Повага (вперше)', 'Визнав 7 лвл FACEIT'],
+  lab: ['📄', '61 — теж бал', 'Здав лабу №7'],
+  map: ['🗺️', 'Картограф', 'Острів розвідано на 100%. Придивись до форми 👀'],
+  bottle: ['🍾', 'Пошта з моря', 'Знайшов лист у пляшці'],
+  end: ['😏', 'Дійшов до кінця', 'Пройшов усю днюху']
+};
+const got = new Set();
+function unlock(id) {
+  if (got.has(id) || !ACH[id]) return;
+  got.add(id);
+  const [i, t, d] = ACH[id];
+  toast(`<div class="ach"><div class="ach-i">${i}</div><div><div class="ach-k">Досягнення розблоковано</div><div class="ach-t">${t}</div><div class="ach-d">${d}</div></div></div>`);
+  sfx.ach();
+}
+
+/* ===== memes (loot) ===== */
+const MEMES = [
+  ['Гороскоп на 21 рівень', `<ul class="horo">
+    <li>🌹 <b>MLBB:</b> розочка міцнішає, тімейти — ні.</li>
+    <li>🏐 <b>Волейбол:</b> мінімум один м'яч в обличчя. На щастя.</li>
+    <li>🎯 <b>CS:</b> зірки кажуть, що ти застрягнеш на 7 лвл FACEIT. Карма 😈</li>
+    <li>🎓 <b>Універ:</b> сесія закриється сама. (Ні.)</li></ul>
+    <p class="meme-foot">Точність прогнозу: 7/10</p>`],
+  ['Хто тобі пише?', `<div class="dlg">
+    <p><b>Мама:</b> хто тобі там постійно пише?</p>
+    <p><b>Дениско:</b> це моя розочка в MLBB 🌹</p>
+    <p><b>Мама:</b></p><div class="big-emo">🗿</div></div>`],
+  ['Волейбол. Класика', `<p>М'яч летить рівно між двома гравцями:</p>
+    <div class="big-emo">🧍 🏐 🧍</div>
+    <p><b>Обидва:</b> «МОЄ!»</p>
+    <div class="big-emo">🧍 💥 🧍</div>
+    <p><b>Обидва:</b> «я думав, ти береш»</p>`],
+  ['Тір-ліст поваги', `<div class="tier">
+    <div><i class="t-s">S</i><span>😎 автор цього сайту</span></div>
+    <div><i class="t-a">A</i><span>🏐 волейбол · 🌹 розочка в MLBB</span></div>
+    <div><i class="t-b">B</i><span>🎂 торт</span></div>
+    <div><i class="t-c">C</i><span>🎓 пари в Політеху</span></div>
+    <div><i class="t-d">D</i><span>⏰ будильник на першу пару</span></div>
+    <div><i class="t-f">F</i><span>💀 7 лвл FACEIT</span></div></div>
+    <p class="meme-foot">Складено зі слів іменинника. Мабуть.</p>`],
+  ['Студент Політеху', `<div class="panels">
+    <div><span class="e">🤓📚</span><b>Вересень</b><br>«цього разу все здам вчасно»</div>
+    <div><span class="e">🧟</span><b>Грудень</b><br>«61 — це теж бал»</div></div>
+    <p class="meme-foot">Ми в одному універі, тому я знаю, про що кажу.</p>`],
+  ['Легендарний лут', `<div class="w1">РОЗШУКУЄТЬСЯ</div><div class="wav">Д</div><div class="w2">ДЕНИСКО</div>
+    <p>Звинувачення: систематична неповага до 7 лвл FACEIT і вік 21 рік без дозволу</p>
+    <div class="w3">Нагорода: 1 повага 🫡</div>`]
+];
+const memesGot = new Set([0]);
+function memeCard(i) {
+  const [t, html] = MEMES[i];
+  return `<article class="meme${i === 5 ? ' wanted' : ''}"><header class="meme-h"><span>Мем #${i}</span><span>${t}</span></header><div class="meme-b">${html}</div></article>`;
+}
+
+/* ===== map data (SVG units, viewBox 400×760) ===== */
+const START = [90, 650];
+const QUESTS = [
+  { icon: '🌹', name: 'Розочка в MLBB', place: 'Розочкові пагорби', x: 128, y: 594, run: qRose, meme: 1, ach: 'rose' },
+  { icon: '🏐', name: 'Волейбол', place: 'Волейбольна бухта', x: 272, y: 598, run: qVolley, meme: 2, ach: 'volley' },
+  { icon: '🎯', name: '7 лвл FACEIT', place: 'Ущелина FACEIT', x: 200, y: 440, run: qFaceit, meme: 3, ach: 'respect' },
+  { icon: '🎓', name: 'Здай лабу', place: 'Політехнічний хребет', x: 200, y: 300, run: qPoly, meme: 4, ach: 'lab' },
+  { icon: '🎂', name: 'Кінець', place: 'Мис Кінець', x: 200, y: 135, run: null }
+];
+const SEGS = [
+  'M90 650Q96 612 128 594',
+  'M128 594C150 650 250 650 272 598',
+  'M272 598C280 545 215 520 200 440',
+  'M200 440C165 400 235 340 200 300',
+  'M200 300C230 260 230 200 200 135'
+];
+const CLOUDS = {
+  1: [[268, 600, 92], [316, 560, 58], [322, 642, 56], [236, 662, 46], [240, 548, 50], [350, 600, 40], [285, 680, 44]],
+  2: [[200, 455, 74], [146, 430, 50], [254, 430, 50], [158, 500, 46], [244, 500, 46], [200, 385, 54], [120, 470, 34], [282, 472, 34]],
+  3: [[200, 305, 74], [146, 285, 52], [256, 285, 52], [200, 238, 52], [148, 345, 44], [254, 345, 44], [112, 300, 34], [292, 300, 34]],
+  4: [[200, 140, 86], [142, 118, 54], [258, 118, 54], [200, 66, 56], [150, 196, 48], [250, 196, 48], [110, 150, 30], [292, 152, 30]]
+};
+
+let done = 0, started = false, busy = false, cleanup = null, pendingAdvance = false, lastFocus = null;
+
+/* ===== screens ===== */
+function showScreen(n) { ['load', 'menu', 'map'].forEach(s => $('#scr-' + s).hidden = s !== n); window.scrollTo(0, 0); }
+
+const TIPS = ['розочка в MLBB — це на все життя 🌹', 'не поважати 7 лвл FACEIT — погана ідея', 'у волейболі м\'яч треба бити, а не ловити обличчям', 'лабу краще здавати до сесії, а не під час', 'якщо щось пішло не так — це лаги'];
+async function runLoading() {
+  const fill = $('#loadFill'), pct = $('#loadPct'), tip = $('#loadTip'); let ti = 0;
+  const tipT = setInterval(() => { ti = (ti + 1) % TIPS.length; tip.textContent = TIPS[ti]; }, 1500);
+  const set = v => { fill.style.width = v + '%'; pct.textContent = v + '%'; fill.parentElement.setAttribute('aria-valuenow', v); };
+  for (let v = 0; v < 99; v += 1 + Math.floor(Math.random() * 7)) { set(v); await wait(REDUCE ? 5 : 70); }
+  set(99); await wait(REDUCE ? 10 : 1100);
+  pct.textContent = '99%…'; await wait(REDUCE ? 10 : 700);
+  set(69); pct.textContent = '69% (ой)'; await wait(REDUCE ? 10 : 800);
+  set(100); clearInterval(tipT); tip.textContent = 'Днюху завантажено. Мемів: багато.';
+  $('#btnStart').hidden = false; $('#btnStart').focus();
+}
+
+/* ===== map ===== */
+function placeToken(x, y) { const t = $('#token'); t.style.left = (x / 4) + '%'; t.style.top = (y / 7.6) + '%'; }
+function setNode(i, s) { const b = $('#nodes').children[i]; b.dataset.s = s; b.querySelector('.n').textContent = s === 'done' ? '✓' : (i + 1); }
+function nodeState(i) { return $('#nodes').children[i].dataset.s; }
+function revealRegion(r) {
+  document.querySelectorAll(`.cloud[data-r="${r}"]`).forEach(c => c.classList.add('gone'));
+  document.querySelectorAll(`#mapSvg .reg[data-r="${r}"]`).forEach(e => e.classList.remove('off'));
+}
+function drawSeg(i) { $('#seg' + i).classList.add('on'); }
+
+function buildMap() {
+  const trail = $('#trail'); trail.innerHTML = '';
+  SEGS.forEach((d, i) => trail.append(svgEl('path', { d, id: 'base' + i, class: 'trail-base reg' + (i ? ' off' : ''), 'data-r': i })));
+  SEGS.forEach((d, i) => trail.append(svgEl('path', { d, id: 'seg' + i, class: 'trail-done', pathLength: 1 })));
+  const cg = $('#clouds'); cg.innerHTML = '';
+  [4, 3, 2, 1].forEach(r => {
+    const g = svgEl('g', { class: 'cloud', 'data-r': r }), bob = svgEl('g', { class: 'bob' });
+    const sh = svgEl('g', { class: 'c-shadow', transform: 'translate(5 7)' }), out = svgEl('g', { class: 'c-out' }), fill = svgEl('g', { class: 'c-fill' });
+    CLOUDS[r].forEach(([cx, cy, rad]) => [sh, out, fill].forEach(grp => grp.append(svgEl('circle', { cx, cy, r: rad }))));
+    bob.append(sh, out, fill); g.append(bob); cg.append(g);
+  });
+  document.querySelectorAll('#mapSvg text.reg').forEach(t => t.classList.toggle('off', +t.dataset.r > 0));
+  const nodes = $('#nodes'); nodes.innerHTML = '';
+  QUESTS.forEach((q, i) => {
+    const b = el(`<button class="node" data-s="locked" aria-label="Квест ${i + 1}: ${q.name}"><span aria-hidden="true">${q.icon}</span><span class="n" aria-hidden="true">${i + 1}</span><span class="bang" aria-hidden="true">!</span></button>`);
+    b.style.left = (q.x / 4) + '%'; b.style.top = (q.y / 7.6) + '%';
+    b.addEventListener('click', () => openQuest(i));
+    nodes.append(b);
+  });
+  $('#token').classList.remove('ease'); placeToken(START[0], START[1]);
+}
+
+function walk(i) {
+  return new Promise(res => {
+    const p = $('#base' + i), L = p.getTotalLength(), tok = $('#token'), D = REDUCE ? 10 : 1100, t0 = performance.now();
+    tok.classList.remove('ease');
+    (function f(t) {
+      const k = Math.min(1, (t - t0) / D), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const pt = p.getPointAtLength(L * e); placeToken(pt.x, pt.y);
+      if (k < 1) requestAnimationFrame(f);
+      else { tok.classList.add('ease'); const q = QUESTS[i]; requestAnimationFrame(() => placeToken(q.x - 27, q.y - 23)); res(); }
+    })(t0);
+  });
+}
+
+function updateHUD() {
+  $('#xpFill').style.width = (done / 5 * 100) + '%';
+  $('#xpText').textContent = `${done}/5 квестів · ${done * 100} XP`;
+  $('#invCount').textContent = memesGot.size;
+}
+function renderLog() {
+  $('#questLog').innerHTML = QUESTS.map((q, i) => {
+    const s = i < done ? 'done' : (i === done && started ? 'active' : 'locked');
+    return `<li data-s="${s}"><span aria-hidden="true">${s === 'locked' ? '❔' : q.icon}</span><span>${s === 'locked' ? '???' : q.name}</span><span class="st">${s === 'done' ? '✅ пройдено' : s === 'active' ? '▶ зараз' : '🔒'}</span></li>`;
+  }).join('');
+}
+
+async function enterMap() {
+  showScreen('map');
+  if (started) return;
+  started = true; busy = true;
+  toast('🎒 У рюкзаку вже є стартовий лут: <b>мем #0</b>');
+  await wait(REDUCE ? 20 : 450);
+  drawSeg(0); await walk(0);
+  setNode(0, 'active'); renderLog(); busy = false;
+}
+
+async function advance() {
+  pendingAdvance = false; busy = true;
+  const i = done; setNode(i, 'done'); done++; updateHUD(); renderLog();
+  if (i === 2) {
+    const s = $('#statRespect'); s.textContent = '100% ✅'; s.className = 'good';
+    $('#ship').style.transform = 'translate(350px,188px) rotate(0deg)'; $('#shipState').textContent = '(врятована ✅)';
+  }
+  revealRegion(done);
+  await wait(REDUCE ? 30 : 900);
+  drawSeg(done); await walk(done);
+  setNode(done, 'active'); renderLog(); busy = false;
+  if (done === 4) {
+    $('#xpText').textContent = '4/5 · острів розвідано. Придивись до форми 👀';
+    await wait(REDUCE ? 20 : 700); unlock('map');
+  }
+}
+
+/* ===== modal ===== */
+function openModal(icon, kicker, title) {
+  lastFocus = document.activeElement;
+  $('#mIcon').textContent = icon; $('#mKicker').textContent = kicker; $('#mTitle').textContent = title;
+  $('#mBody').innerHTML = ''; $('#modal').hidden = false;
+  setTimeout(() => $('#mClose').focus({ preventScroll: true }), 30);
+}
+function closeModal() {
+  if (cleanup) { cleanup(); cleanup = null; }
+  $('#modal').hidden = true; $('#mBody').innerHTML = '';
+  if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  if (pendingAdvance) advance();
+}
+$('#mClose').onclick = closeModal;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+
+function openQuest(i) {
+  if (busy) return;
+  const q = QUESTS[i], s = nodeState(i);
+  if (s === 'done') { toast(`✅ «${q.name}» вже пройдено`); return; }
+  if (s !== 'active') return;
+  if (!q.run) { startEnding(); return; }
+  openModal(q.icon, `Квест ${i + 1}/5 · ${q.place}`, q.name);
+  cleanup = q.run($('#mBody'), () => questWin(i));
+}
+function questWin(i) {
+  const q = QUESTS[i];
+  if (cleanup) { cleanup(); cleanup = null; }
+  sfx.win(); confetti(70); unlock(q.ach); memesGot.add(q.meme); updateHUD();
+  $('#mBody').innerHTML = `<div class="win"><div class="win-k">✅ Квест пройдено</div><div class="win-xp px">+100 XP</div><div class="loot-k">🎁 Лут: новий мем</div>${memeCard(q.meme)}<button class="btn" id="take">Забрати лут і далі →</button></div>`;
+  pendingAdvance = true;
+  $('#take').onclick = closeModal;
+  $('#take').focus({ preventScroll: true });
+}
+
+function openInv(tab = 'memes') {
+  openModal('🎒', 'Рюкзак', 'Інвентар');
+  const body = $('#mBody'), total = Object.keys(ACH).length;
+  body.innerHTML = `<div class="tabs" role="tablist"><button class="tab" role="tab" data-t="memes">Меми ${memesGot.size}/${MEMES.length}</button><button class="tab" role="tab" data-t="ach">Досягнення ${got.size}/${total}</button></div><div id="invPanel"></div>`;
+  const show = t => {
+    body.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
+    $('#invPanel').innerHTML = t === 'memes'
+      ? `<div class="inv-grid">${MEMES.map((m, i) => memesGot.has(i) ? memeCard(i) : `<div class="locked">🔒 Мем #${i} · ${i < 5 ? 'пройди квест ' + i : 'дійди до кінця'}</div>`).join('')}</div>`
+      : `<ul class="achs">${Object.entries(ACH).map(([k, [ic, t2, d]]) => got.has(k) ? `<li><span class="ai">${ic}</span><span><b>${t2}</b><small>${d}</small></span></li>` : `<li class="no"><span class="ai">🔒</span><span><b>???</b><small>Ще не відкрито</small></span></li>`).join('')}</ul>`;
+  };
+  body.querySelectorAll('.tab').forEach(b => b.onclick = () => show(b.dataset.t));
+  show(tab);
+}
+
+/* ===== menu & map buttons ===== */
+$('#btnStart').onclick = () => { sfx.init(); unlock('patience'); setTimeout(() => unlock('open'), 1200); showScreen('menu'); };
+$('#btnPlay').onclick = enterMap;
+$('#btnSettings').onclick = () => {
+  unlock('settings'); sfx.fail();
+  openModal('⚙️', 'system32 / днюха.exe', 'Налаштування');
+  $('#mBody').innerHTML = `<div class="err"><div class="err-bar">⚠ Помилка 21</div><p class="lead">Неможливо зменшити вік. Спробуй наступного року.</p><div class="err-btns"><button class="btn ghost" data-ok>ОК</button><button class="btn ghost" data-ok>Теж ОК</button></div></div>`;
+  $('#mBody').querySelectorAll('[data-ok]').forEach(b => b.onclick = closeModal);
+};
+$('#btnExit').onclick = e => {
+  const b = e.currentTarget; unlock('escape'); sfx.fail();
+  toast('🚫 З днюхи не виходять. Тільки вперед.');
+  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+};
+$('#btnInv').onclick = () => openInv();
+$('#btnInv2').onclick = () => openInv();
+$('#btnSound').onclick = () => {
+  sfx.on = !sfx.on; const b = $('#btnSound');
+  b.textContent = sfx.on ? '🔊' : '🔇'; b.setAttribute('aria-label', sfx.on ? 'Вимкнути звук' : 'Увімкнути звук');
+  if (!sfx.on) music.stop();
+};
+$('#bottle').onclick = () => {
+  unlock('bottle'); openModal('🍾', 'Знахідка в морі', 'Лист у пляшці');
+  $('#mBody').innerHTML = `<p class="lead">«Якщо ти це читаєш — тобі вже 21. Вітаю, ти старий.»</p><p class="meme-foot">P.S. Це кінець листа. Але не кінець острова 😏</p><button class="btn" id="okB">Зрозумів</button>`;
+  $('#okB').onclick = closeModal;
+};
+
+/* ===== quest 1: roses ===== */
+function qRose(body, win) {
+  body.innerHTML = `<p class="lead">Ти в мене в розочці в MLBB 🌹 Такий статус треба підтвердити: збери 5 розочок, поки не зів'яли. Зів'ялі 🥀 не чіпай.</p>
+    <div class="arena" id="arena"><div class="arena-hud">🌹 <b id="cnt">0</b>/5</div></div>`;
+  const arena = $('#arena', body), cnt = $('#cnt', body);
+  let n = 0, alive = true, timer = null;
+  function spawn() {
+    if (!alive) return;
+    const bad = n > 0 && Math.random() < .25;
+    const b = el(`<button class="pop" aria-label="${bad ? 'Зівʼяла троянда' : 'Розочка'}">${bad ? '🥀' : '🌹'}</button>`);
+    const W = arena.clientWidth, H = arena.clientHeight;
+    b.style.left = (8 + Math.random() * (W - 74)) + 'px'; b.style.top = (44 + Math.random() * (H - 108)) + 'px';
+    arena.appendChild(b);
+    const ttl = setTimeout(() => b.remove(), 1500);
+    b.addEventListener('click', () => {
+      if (!alive) return;
+      clearTimeout(ttl); b.classList.add('got'); setTimeout(() => b.remove(), 260);
+      if (bad) { n = Math.max(0, n - 1); sfx.fail(); floatText(b, '−1 🥀'); }
+      else { n++; sfx.coin(); floatText(b, '+1 🌹'); }
+      cnt.textContent = n;
+      if (n >= 5) { alive = false; clearTimeout(timer); setTimeout(win, 450); }
+    });
+    timer = setTimeout(spawn, 600 + Math.random() * 350);
+  }
+  spawn();
+  return () => { alive = false; clearTimeout(timer); };
+}
+
+/* ===== quest 2: volleyball ===== */
+function qVolley(body, win) {
+  body.innerHTML = `<p class="lead">Пам'ятаєш, як ми грали у волейбол? Не дай м'ячу впасти: тапай по ньому 5 разів поспіль.</p>
+    <div class="arena court" id="arena" tabindex="0" aria-label="Майданчик: тапай по мʼячу або тисни пробіл"><div class="arena-hud">Пасів: <b id="cnt">0</b>/5</div><div class="net"></div><div class="ball" id="ball">🏐</div><div class="arena-msg" id="msg"></div></div>
+    <p class="hint">Можна й пробілом, коли мʼяч падає.</p>`;
+  const arena = $('#arena', body), ball = $('#ball', body), msg = $('#msg', body), cnt = $('#cnt', body);
+  const R = 29; let W = arena.clientWidth, H = arena.clientHeight;
+  let x = W / 2, y = 70, vx = 0, vy = -140, g = 520, hits = 0, fails = 0, alive = true, paused = false, last = performance.now(), raf = 0;
+  function say(t) { msg.textContent = t; msg.classList.remove('show'); void msg.offsetWidth; msg.classList.add('show'); }
+  function reset() { W = arena.clientWidth; H = arena.clientHeight; x = W / 2; y = 60; vx = (Math.random() - .5) * 80; vy = -120; paused = false; say('Подача!'); }
+  let lastHit = 0;
+  function hit(px) {
+    if (paused || !alive || performance.now() - lastHit < 260) return;
+    lastHit = performance.now(); hits++; cnt.textContent = hits; sfx.bump();
+    vy = -(430 + Math.random() * 90); vx = (x - px) * 4 + (Math.random() - .5) * 160;
+    say(['МОЄ!', 'Пас!', 'Є!', 'Тримай!', 'КРАСАВА!'][hits - 1] || 'Є!');
+    if (hits >= 5) { alive = false; setTimeout(win, 650); }
+  }
+  function loop(t) {
+    if (!alive) return;
+    const dt = Math.min(.033, (t - last) / 1000); last = t;
+    if (!paused) {
+      vy += g * dt; x += vx * dt; y += vy * dt;
+      if (x < R) { x = R; vx = Math.abs(vx); }
+      if (x > W - R) { x = W - R; vx = -Math.abs(vx); }
+      if (y < R) { y = R; vy = Math.abs(vy) * .4; }
+      if (y > H - R) {
+        y = H - R; paused = true; fails++; hits = 0; cnt.textContent = 0; sfx.fail(); unlock('out');
+        if (fails >= 2) g = Math.max(300, g * .8);
+        say(fails >= 2 ? 'АУТ 😭 гравітацію зменшено' : 'АУТ 😭');
+        setTimeout(() => alive && reset(), 1100);
+      }
+      ball.style.transform = `translate(${x - R}px,${y - R}px) rotate(${x * 2}deg)`;
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  arena.addEventListener('pointerdown', e => {
+    const r = arena.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (Math.hypot(px - x, py - y) < R + 40) hit(px);
+  });
+  arena.addEventListener('keydown', e => {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault(); if (vy > 0 && y > H * .45) hit(x + (Math.random() - .5) * 20);
+  });
+  say('Подача!'); raf = requestAnimationFrame(loop);
+  setTimeout(() => arena.focus({ preventScroll: true }), 60);
+  return () => { alive = false; cancelAnimationFrame(raf); };
+}
+
+/* ===== quest 3: FACEIT ===== */
+function qFaceit(body, win) {
+  body.innerHTML = `<p class="lead">Ти не поважаєш 7 лвл FACEIT. Зараз перевіримо, хто ти такий: зніми 5 мішеней якомога швидше.</p>
+    <div class="arena range" id="arena"><div class="arena-hud">🎯 <b id="cnt">0</b>/5 · <span id="tm">0.00</span> с</div></div>`;
+  const arena = $('#arena', body), cnt = $('#cnt', body), tm = $('#tm', body);
+  let n = 0, t0 = 0, alive = true, raf = 0;
+  (function clock() { if (!alive) return; if (t0) tm.textContent = ((performance.now() - t0) / 1000).toFixed(2); raf = requestAnimationFrame(clock); })();
+  function next() {
+    const b = el(`<button class="target" aria-label="Мішень">🎯</button>`);
+    const W = arena.clientWidth, H = arena.clientHeight;
+    b.style.left = (8 + Math.random() * (W - 74)) + 'px'; b.style.top = (44 + Math.random() * (H - 108)) + 'px';
+    b.addEventListener('click', () => {
+      if (!alive) return;
+      if (!t0) t0 = performance.now();
+      n++; cnt.textContent = n; sfx.shot(); floatText(b, n === 5 ? 'ACE!' : 'HEADSHOT'); b.remove();
+      if (n < 5) next(); else { alive = false; cancelAnimationFrame(raf); result(((performance.now() - t0) / 1000).toFixed(2)); }
+    });
+    arena.appendChild(b);
+    if (document.activeElement && document.activeElement.classList.contains('target')) b.focus({ preventScroll: true });
+  }
+  function result(s) {
+    const sus = s < 2.5 ? ' (з підозрою на 8-й)' : '';
+    body.innerHTML = `<div class="verdict"><div class="v-k">Аналіз aim'у завершено</div><div class="v-time">${s} с</div>
+      <div class="v-lvl"><span class="px">LVL 7</span></div>
+      <p class="lead">Вітаю. Твій рівень — рівно <b>7 лвл FACEIT</b>${sus}. Той самий, який ти не поважаєш 🤡</p>
+      <button class="btn pink" id="go">І що тепер?</button></div>`;
+    sfx.fail();
+    const go = $('#go', body); go.onclick = respect; go.focus({ preventScroll: true });
+  }
+  function respect() {
+    const HINTS = ['Подумай добре.', 'Ти впевнений?', 'Кнопка «Ні» не хоче, щоб ти її натискав.', 'Навіть кнопка поважає 7 лвл.', 'Ну камон 🥲', 'Все, тепер обидві кнопки — «Так».'];
+    body.innerHTML = `<p class="q-big">Тепер ти поважаєш 7 лвл FACEIT?</p>
+      <div class="yesno" id="yn"><button class="btn mint" id="yes">Так, поважаю</button><button class="btn ghost" id="no">Ні</button></div>
+      <p class="hint" id="hint">${HINTS[0]}</p>`;
+    const yn = $('#yn', body), yes = $('#yes', body), no = $('#no', body), hint = $('#hint', body);
+    let dodges = 0, flipped = false;
+    function dodge() {
+      if (flipped) return;
+      dodges++; sfx.whoosh();
+      no.style.position = 'absolute';
+      yes.style.transform = `scale(${Math.min(1.3, 1 + dodges * .06)})`;
+      const W = yn.clientWidth, bw = no.offsetWidth, bh = no.offsetHeight;
+      const yTop = yes.offsetTop - yes.offsetHeight * .16; // room for the growing "Так"
+      const prev = parseFloat(no.style.top) || yTop;
+      let nx, ny, tries = 0;
+      do { nx = 6 + Math.random() * (W - bw - 12); ny = 6 + Math.random() * Math.max(0, yTop - bh - 18); tries++; }
+      while (tries < 20 && Math.abs(ny - prev) < 30);
+      no.style.left = nx + 'px'; no.style.top = ny + 'px';
+      no.style.transform = `scale(${Math.max(.5, 1 - dodges * .1)})`;
+      hint.textContent = HINTS[Math.min(dodges, HINTS.length - 2)];
+      if (dodges === 3) unlock('stubborn');
+      if (dodges >= 5) { flipped = true; no.textContent = 'Так, поважаю'; no.className = 'btn mint'; no.style.transform = 'scale(1)'; hint.textContent = HINTS[HINTS.length - 1]; }
+    }
+    no.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') dodge(); });
+    no.addEventListener('pointerdown', e => { if (!flipped) { e.preventDefault(); dodge(); } });
+    no.addEventListener('click', () => { if (flipped) { win(); return; } toast('❌ Помилка 777: відповідь «Ні» не підтримується'); dodge(); });
+    yes.onclick = () => win();
+  }
+  next();
+  return () => { alive = false; cancelAnimationFrame(raf); };
+}
+
+/* ===== quest 4: lab ===== */
+function qPoly(body, win) {
+  const lines = [['Переробіть.', 'Здати ще раз'], ['Титулка не за методичкою.', 'Здати ще раз (плачучи)'], ['А висновки де?', 'Здати востаннє 🙏']];
+  body.innerHTML = `<p class="lead">Ми з тобою в одному універі, тож ти знаєш цей біль. Здай лабу №7 (так, сьому — бо карма).</p>
+    <div class="sheet">📄 Лабораторна робота №7<small>Виконав: Дениско · Перевірив: викладач, який нікуди не поспішає</small><div class="stamp" id="stamp">ЗАРАХОВАНО · 61/100</div></div>
+    <div class="teacher"><div class="face" aria-hidden="true">👨‍🏫</div><div class="bubble" id="say" aria-live="polite">Ну, показуйте.</div></div>
+    <button class="btn" id="sub">Здати лабу</button>`;
+  const say = $('#say', body), sub = $('#sub', body), stamp = $('#stamp', body);
+  let k = 0;
+  sub.onclick = () => {
+    say.classList.remove('shake'); void say.offsetWidth; say.classList.add('shake');
+    if (k < lines.length) { say.textContent = lines[k][0]; sub.textContent = lines[k][1]; k++; sfx.fail(); return; }
+    sub.disabled = true; say.textContent = '…Ну добре. Зараховано.'; sfx.stamp(); stamp.classList.add('on'); floatText(stamp, '+61');
+    setTimeout(win, 1300);
+  };
+  return null;
+}
+
+/* ===== ending ===== */
+const LETTER = `Дениску, з днем народження.
+
+Я довго думав, що написати.
+Ти — людина, з якою і в MLBB катку затащити, і у волейбол пограти, і на парах у Політеху вижити.
+Ти в мене в розочці не просто так 🌹
+Бажаю тобі здоров'я, грошей, легкої сесії, 10 лвл FACEIT (і нарешті поваги до 7-го) та адекватних тімейтів.
+Ти справжній друг. Я дуже радий, що ти в мене є.
+Від щирого серця…`;
+let endRun = 0;
+async function startEnding() {
+  const run = ++endRun, alive = () => run === endRun;
+  const end = $('#scr-end'), letter = $('#letter'), text = $('#letterText'), endK = $('#endK'), inner = $('#endInner');
+  end.hidden = false; end.scrollTop = 0;
+  $('#punch').hidden = true; $('#p2').hidden = true; $('#endFoot').hidden = true;
+  letter.hidden = true; letter.classList.remove('fly'); text.textContent = '';
+  endK.textContent = 'Ти дійшов до кінця 😏'; endK.hidden = false;
+  sfx.win();
+  await wait(REDUCE ? 300 : 1800); if (!alive()) return;
+  endK.textContent = 'А тепер серйозно.';
+  letter.hidden = false; music.start(); letter.focus({ preventScroll: true });
+  let skip = false;
+  letter.onclick = () => { skip = true; };
+  letter.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); skip = true; } };
+  const chars = [...LETTER];
+  for (let i = 0; i < chars.length; i++) {
+    if (!alive()) return;
+    if (skip) { text.textContent = LETTER; break; }
+    text.textContent += chars[i];
+    await wait(REDUCE ? 0 : chars[i] === '\n' ? 380 : (',.—…'.includes(chars[i]) ? 160 : 34));
+  }
+  await wait(REDUCE ? 400 : 1700); if (!alive()) return;
+  music.stop(); sfx.scratch();
+  letter.classList.add('fly'); endK.hidden = true;
+  await wait(REDUCE ? 100 : 750); if (!alive()) return;
+  letter.hidden = true; $('#punch').hidden = false;
+  await wait(REDUCE ? 200 : 950); if (!alive()) return;
+  $('#p2').hidden = false; sfx.airhorn(); confetti(220, true);
+  if (!REDUCE) {
+    const fb = $('#flashbox'); fb.classList.remove('go'); void fb.offsetWidth; fb.classList.add('go');
+    inner.classList.remove('shake-all'); void inner.offsetWidth; inner.classList.add('shake-all');
+  }
+  await wait(REDUCE ? 300 : 2400); if (!alive()) return;
+  $('#endFoot').hidden = false; unlock('end'); memesGot.add(5); updateHUD();
+  setTimeout(() => alive() && toast('🎁 Легендарний лут у 🎒: <b>мем #5</b>'), 1300);
+}
+
+function resetGame() {
+  endRun++; music.stop();
+  if (cleanup) { cleanup(); cleanup = null; }
+  $('#modal').hidden = true; $('#scr-end').hidden = true;
+  done = 0; started = false; busy = false; pendingAdvance = false;
+  const s = $('#statRespect'); s.textContent = '0% ❌'; s.className = 'bad';
+  $('#ship').style.transform = ''; $('#shipState').textContent = '(затонула)';
+  buildMap(); updateHUD(); renderLog(); showScreen('menu');
+  toast('🔁 NEW GAME+ · меми й досягнення залишаються');
+}
+$('#btnAgain').onclick = resetGame;
+
+/* ===== boot ===== */
+buildMap(); updateHUD(); renderLog(); runLoading();
+</script>
+</body>
+</html>
